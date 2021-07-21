@@ -1,0 +1,57 @@
+---
+kind: DeploymentConfig
+apiVersion: v1
+metadata:
+  name: front-end
+  namespace: my-project  # твой неймспейс
+spec:
+  strategy:
+    type: Recreate    # уточни, какие бывают стратегии
+    resources: {}
+  triggers:
+    - type: ConfigChange
+  replicas: 3
+  selector:
+    name: front-end-replica
+  template:
+    metadata:
+      labels:
+        name: front-end-replica
+    spec:
+      containers:
+        - name: member-front
+          image: registry.gitlab.com/devops1021/tchallenge-participant/front:16   # имейдж
+          ports:
+            - containerPort: 8080
+          # livenessProbe:
+          #   failureThreshold: 3
+          #   httpGet:
+          #     path: /
+          #     port: 8080
+          #     scheme: HTTP
+          #   periodSeconds: 10
+          #   successThreshold: 1   это пока не критично
+          #   timeoutSeconds: 1
+
+          imagePullSecrets:
+            - name: sec
+  restartPolicy: Always
+  dnsPolicy: ClusterFirst
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: front-end
+  namespace: my-project # имя твоего неймспейса
+  labels:
+    name: front-end
+spec:
+  ports:
+    - name: frontend8080
+      port: 8080
+      targetPort: 8080
+  selector:
+    name: front-end-replica
+  portalIP: None
+  sessionAffinity: None
+  type: ClusterIP
